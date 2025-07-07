@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Button, Typography, message} from 'antd';
+import { Button, Typography} from 'antd';
 import TextInput from './components/TextInput';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from './services/loginservices';
+import { message } from 'antd';
 
 function Login(){
 
@@ -17,13 +18,14 @@ function Login(){
   };
 
   const handleLogin= async() =>{
+    console.log('Clicked');
     if(!email || !password){
       message.error("Please fill in all fields");
       return;
     }
     try{
       const data = await loginUser(email,password)
-      const msg = data?.message || "Login successful";
+      const msg = data?.message ;
       message.success(msg);
       localStorage.setItem('username', data.user.username);
       localStorage.setItem('emp_id', data.user.emp_id);
