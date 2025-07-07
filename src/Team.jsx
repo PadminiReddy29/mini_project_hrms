@@ -1,89 +1,63 @@
-// src/pages/Team.jsx
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, Avatar, Row, Col, Spin, message } from 'antd';
-import { getTeamHierarchy } from './services/teamservices';   // 👈 NEW import
+import { getTeamHierarchy } from './services/teamservices';
 
-const { Title, Text } = Typography;
-
-const PersonCard = ({ user, highlight }) => (
-  <Card
-    size="small"
-    style={{
-      width: 200,
-      textAlign: 'center',
-      background: highlight ? '#e6f7ff' : '#fff',
-    }}
-  >
-    <Avatar size={48} style={{ backgroundColor: '#1890ff', marginBottom: 8 }}>
-      {user.username[0].toUpperCase()}
-    </Avatar>
-    <Title level={5} style={{ margin: 0 }}>
-      {user.username}
-    </Title>
-    <Text type="secondary">{user.role}</Text>
-  </Card>
-);
-
-const Team = () => {
+function Team() {
   const empId = localStorage.getItem('emp_id');
-  const [data, setData]     = useState(null);
-  const [loading, setLoad]  = useState(true);
+  const [data, setData] = useState(null);
 
   useEffect(() => {
-    const load = async () => {
+    async function fetchTeam() {
       try {
-        const res = await getTeamHierarchy(empId);   // service
+        const res = await getTeamHierarchy(empId);
         setData(res);
       } catch (err) {
-        message.error(err.error || 'Failed to load team hierarchy');
-      } finally {
-        setLoad(false);
+        console.error('Error:', err);
       }
-    };
-    load();
+    }
+
+    fetchTeam();
   }, [empId]);
 
-  if (loading) return <Spin style={{ display: 'block', margin: '60px auto' }} />;
+  if (!data) return <p>Loading team data...</p>;
 
   return (
-    <div style={{ padding: 24 }}>
-      <Title level={3}>My Team </Title>
+    <div style={{ padding: '20px' }}>
+      <h2>Team Hierarchy</h2>
 
-      {data.reporting_to.length > 0 && (
-        <>
-          <Title level={4}>Reporting To</Title>
-          <Row gutter={[16, 16]} justify="center">
-            {data.reporting_to.map((m) => (
-              <Col key={m.emp_id}>
-                <PersonCard user={m} />
-              </Col>
-            ))}
-          </Row>
-        </>
-      )}
+      <div>
+        <h4>Reporting To:</h4>
+        {data.reporting_to.length > 0 ? (
+          data.reporting_to.map((person) => (
+            <p key={person.emp_id}>
+              {person.username} ({person.role})
+            </p>
+          ))
+        ) : (
+          <p>No superiors</p>
+        )}
+      </div>
 
-      <Row justify="center" style={{ margin: '32px 0' }}>
-        <PersonCard user={data} highlight />
-      </Row>
+      <div>
+        <h4>You:</h4>
+        <p>
+          {data.username} ({data.role})
+        </p>
+      </div>
 
-      {data.are_reporting.length > 0 && (
-        <>
-          <Title level={4}>Direct Reports</Title>
-          <Row gutter={[16, 16]} justify="center">
-            {data.are_reporting.map((s) => (
-              <Col key={s.emp_id}>
-                <PersonCard user={s} />
-              </Col>
-            ))}
-          </Row>
-        </>
-      )}
-
-      {data.reporting_to.length === 0 && data.are_reporting.length === 0 && (
-        <Text>You have no reporting hierarchy set.</Text>
-      )}
+      <div>
+        <h4>Direct Reports:</h4>
+        {data.are_reporting.length > 0 ? (
+          data.are_reporting.map((person) => (
+            <p key={person.emp_id}>
+              {person.username} ({person.role})
+            </p>
+          ))
+        ) : (
+          <p>No subordinates</p>
+        )}
+      </div>
     </div>
   );
-};
+}
 
 export default Team;
