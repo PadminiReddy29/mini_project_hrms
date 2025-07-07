@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, Typography, Spin, message } from 'antd';
 import { getUserProfile } from '../services/profileload';
 import { Descriptions } from 'antd';
-console.log('⚡ Profile component file loaded');
+
 
 
 const { Title, Paragraph } = Typography;
@@ -12,7 +12,7 @@ const Profile = () => {
   const [user, setUser]   = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const emp_id = localStorage.getItem('emp_id');   // 🟡 log it
+  const emp_id = localStorage.getItem('emp_id'); 
   console.log('emp_id in Profile:', emp_id);
 
   useEffect(() => {
