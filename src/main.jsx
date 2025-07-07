@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import 'antd/dist/reset.css'
 import './index.css'
-import ForgotPassword from './ForgotPassword.jsx';
+import ForgotPassword from './ForgotPassword.jsx';  
 import Login from './Login.jsx'
 import { BrowserRouter,Routes, Route } from 'react-router-dom'
 import ResetPassword from './ResetPassword.jsx'
@@ -10,6 +11,7 @@ import Leaves from './Leaves.jsx'
 import Attendance from './Attendance.jsx';
 import Team from './Team.jsx';
 import DashboardLayout from './components/Dashboardlayout';
+import '@ant-design/v5-patch-for-react-19';
 
 
 
