@@ -1,73 +1,84 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Typography, Card } from 'antd';
+import { Button, Typography, message, Spin } from 'antd';
+import { checkIn, checkOut, getStatus } from './services/attendance';
 
 const { Title, Paragraph } = Typography;
 
 const Attendance = () => {
-  const empId = localStorage.getItem('emp_id');
-  const checkInKey = `checkin_${empId}`;
-  const summaryKey = `summary_${empId}`;
-
+  const emp_id = localStorage.getItem('emp_id');
   const [checkInTime, setCheckInTime] = useState(null);
-  const [summary, setSummary] = useState(null);
+  const [checkOutTime, setCheckOutTime] = useState(null);
+  const [hoursWorked, setHoursWorked] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedCheckIn = localStorage.getItem(checkInKey);
-    const savedSummary = localStorage.getItem(summaryKey);
-
-    if (savedCheckIn) setCheckInTime(new Date(savedCheckIn));
-    if (savedSummary) setSummary(JSON.parse(savedSummary));
-  }, []);
-
-  const handleCheckIn = () => {
-    const now = new Date();
-    localStorage.setItem(checkInKey, now.toISOString());
-    setCheckInTime(now);
-  };
-
-  const handleCheckOut = () => {
-    if (!checkInTime) return;
-
-    const now = new Date();
-    const diff = now - checkInTime;
-    const hours = Math.floor(diff / 3600000);
-    const minutes = Math.floor((diff % 3600000) / 60000);
-
-    const result = {
-      date: now.toLocaleDateString(),
-      duration: `${hours}h ${minutes}m`,
+    const fetchStatus = async () => {
+      try {
+        const data = await getStatus(emp_id);
+        if (data.checkIn) setCheckInTime(new Date(data.checkIn));
+        if (data.checkOut) setCheckOutTime(new Date(data.checkOut));
+        if (data.hoursWorked) setHoursWorked(data.hoursWorked);
+      } catch (err) {
+        message.error(err.message || 'Failed to load status');
+      } finally {
+        setLoading(false);
+      }
     };
 
-    localStorage.removeItem(checkInKey);
-    localStorage.setItem(summaryKey, JSON.stringify(result));
-    setCheckInTime(null);
-    setSummary(result);
+    fetchStatus();
+  }, [emp_id]);
+
+  const handleCheckIn = async () => {
+    try {
+      const data = await checkIn(emp_id);
+      message.success(data.message);
+      setCheckInTime(new Date(data.checkIn));
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Check-in failed');
+    }
   };
 
+  const handleCheckOut = async () => {
+    try {
+      const data = await checkOut(emp_id);
+      message.success(data.message);
+      setCheckOutTime(new Date(data.checkOut));
+      setHoursWorked(data.hoursWorked);
+    } catch (err) {
+      message.error(err.response?.data?.message || 'Check-out failed');
+    }
+  };
+
+  if (loading) return <Spin style={{ display: 'block', margin: '80px auto' }} />;
+
   return (
-    <Card style={{ maxWidth: 400, margin: '2rem auto', textAlign: 'center' }}>
+    <div style={{ textAlign: 'center', marginTop: '3rem' }}>
       <Title level={3}>Attendance</Title>
 
-      <Button type="primary" onClick={handleCheckIn} disabled={!!checkInTime} style={{ marginRight: 10 }}>
+      <Button type="primary" onClick={handleCheckIn} disabled={!!checkInTime} style={{ marginRight: 12 }}>
         Check In
       </Button>
-      <Button danger onClick={handleCheckOut} disabled={!checkInTime}>
+      <Button type="primary" danger onClick={handleCheckOut} disabled={!checkInTime || !!checkOutTime}>
         Check Out
       </Button>
 
-      {summary && (
+      {checkInTime && (
         <Paragraph style={{ marginTop: 20 }}>
-          <strong>Date:</strong> {summary.date} <br />
-          <strong>Worked:</strong> {summary.duration}
+          <strong>Checked in at:</strong> {checkInTime.toLocaleTimeString()}
         </Paragraph>
       )}
 
-      {checkInTime && (
-        <Paragraph style={{ marginTop: 10 }}>
-          Checked in at: <strong>{checkInTime.toLocaleTimeString()}</strong>
-        </Paragraph>
+      {checkOutTime && (
+        <>
+          <Paragraph>
+            <strong>Checked out at:</strong> {checkOutTime.toLocaleTimeString()}
+          </Paragraph>
+          <Paragraph>
+            <strong>Hours Worked:</strong> {hoursWorked} hours
+          </Paragraph>
+        </>
       )}
-    </Card>
+    </div>
   );
 };
 
